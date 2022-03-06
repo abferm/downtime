@@ -5,7 +5,6 @@ go 1.18
 require (
 	github.com/benbjohnson/clock v1.3.0
 	github.com/juju/loggo v0.0.0-20210728185423-eebad3a902c4
-	github.com/leekchan/timeutil v0.0.0-20150802142658-28917288c48d
 	github.com/lestrrat-go/strftime v1.0.5
 	github.com/prometheus/procfs v0.7.3
 	github.com/stretchr/testify v1.7.0

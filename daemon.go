@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/benbjohnson/clock"
-	"github.com/leekchan/timeutil"
 )
 
 func NewDaemon(dataStore DataStore, database EventWriter, sleep time.Duration) *Daemon {
@@ -145,7 +144,7 @@ func (d Daemon) report(bootTime time.Time, timeFormat string) error {
 	}
 
 	if haveShutdown {
-		logger.Infof("shutdown at %s", timeutil.Strftime(&shutdown, timeFormat))
+		logger.Infof("shutdown at %s", shutdown.Format(timeFormat))
 		err = d.updateDatabase(shutdown, bootTime, false)
 	} else {
 		logger.Infof("crashed at %s", stamp.Format(timeFormat))
