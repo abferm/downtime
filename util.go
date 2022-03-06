@@ -6,14 +6,13 @@ import (
 	"runtime/debug"
 	"time"
 
-	"github.com/leekchan/timeutil"
+	"github.com/lestrrat-go/strftime"
 )
 
 // StrftimeToGo converts a c-style strftime format string to the format expected by time.Time.Format()
-func StrftimeToGo(cFormat string) (goFormat string) {
-	refTime, _ := time.Parse(time.RFC3339Nano, time.RFC3339Nano)
-	refTime = refTime.Local()
-	return timeutil.Strftime(&refTime, cFormat)
+func StrftimeToGo(cFormat string) (goFormat string, err error) {
+	refTime := time.Date(2006, time.January, 2, 15, 4, 5, 999999999, time.FixedZone("MST", -7*60*60))
+	return strftime.Format(cFormat, refTime)
 }
 
 func PrintVersion() {

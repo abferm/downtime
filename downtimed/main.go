@@ -36,8 +36,8 @@ func execute() error {
 	logDestination := flag.String("l", "daemon", "Logging destination. If the argument contains a slash (/) it is interpreted to be a path name to a log file, which will be created if it does not exist already. Otherwise it is interpreted as a syslog facility name.")
 	pidFile := flag.String("p", "/var/run/downtimed.pid", "The location of the file which keeps track of the process ID of the running daemon process. The system default location is determined at compile time. May be disabled by specifying \"none\".")
 	flag.Bool("S", false, "Disable fsync (ignored)")
-	sleep := flag.Int64("s", 15, "Defines how long to sleep between each update of the on−disk time stamp file. More frequent updates result in more accurate downtime reporting in the case of a system crash. Less frequent updates decrease the amount of disk writes performed.")
-	version := flag.Bool("v", false, "Display the program version number, copyright message and the default settings.")
+	sleep := flag.Int64("s", downtime.DefaultSleepSeconds, "Defines how long to sleep between each update of the on−disk time stamp file. More frequent updates result in more accurate downtime reporting in the case of a system crash. Less frequent updates decrease the amount of disk writes performed.")
+	version := flag.Bool("v", false, "Display the program version number and copyright message.")
 	flag.Parse()
 
 	logger.SetLogLevel(loggo.INFO)
@@ -51,7 +51,7 @@ func execute() error {
 		exe, _ := os.Executable()
 		daemonizeArgs := []string{"-p", *pidFile, "-l", *pidFile, "--", exe}
 		daemonizeArgs = append(daemonizeArgs, os.Args[1:]...)
-		daemonizeArgs = append(daemonizeArgs, "-F") // we're done forking
+		daemonizeArgs = append(daemonizeArgs, "-F") // Make sure our forked daemon doesn't fork again
 		cmd := exec.Command("daemonize", daemonizeArgs...)
 		cmd.Stderr = os.Stderr
 		cmd.Stdout = os.Stdout
@@ -114,8 +114,12 @@ func execute() error {
 		logger.Criticalf(err.Error())
 		return err
 	}
-
-	err = daemon.Init(boottime, downtime.StrftimeToGo(*cTimeFormat))
+	goTimeFormat, err := downtime.StrftimeToGo(*cTimeFormat)
+	if err != nil {
+		logger.Criticalf("invalid time format: %s", err.Error())
+		return err
+	}
+	err = daemon.Init(boottime, goTimeFormat)
 	if err != nil {
 		logger.Criticalf("init failed: %s", err.Error())
 		return err

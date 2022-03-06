@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+const EventSize = 16
+
 /*ENUM(
 None = 0
 Up = 1
