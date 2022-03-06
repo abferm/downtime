@@ -8,31 +8,61 @@ import (
 	"time"
 )
 
-type Database struct {
+func NewDatabaseWriter(writer io.Writer) *DatabaseWriter {
+	return &DatabaseWriter{
+		writer: writer,
+	}
+}
+
+type DatabaseWriter struct {
+	writer io.Writer
+}
+
+func (db *DatabaseWriter) Append(event Event) error {
+	err := binary.Write(db.writer, binary.BigEndian, event)
+	if err != nil {
+		return err
+	}
+	sync, ok := db.writer.(syncer)
+	if ok {
+		return sync.Sync()
+	}
+	return nil
+}
+
+func (db *DatabaseWriter) Close() error {
+	c, ok := db.writer.(io.Closer)
+	if ok {
+		return c.Close()
+	}
+	return nil
+}
+
+type DatabaseReader struct {
 	reader io.ReadSeeker
 }
 
-func NewDatabase(reader io.ReadSeeker) *Database {
-	return &Database{
+func NewDatabaseReader(reader io.ReadSeeker) *DatabaseReader {
+	return &DatabaseReader{
 		reader: reader,
 	}
 }
 
-func OpenDatabase(filepath string) (*Database, error) {
+func OpenDatabaseReader(filepath string) (*DatabaseReader, error) {
 	file, err := os.Open(filepath)
 	if err != nil {
 		return nil, err
 	}
-	return NewDatabase(file), nil
+	return NewDatabaseReader(file), nil
 }
 
-func (db *Database) Next() (Event, error) {
+func (db *DatabaseReader) Next() (Event, error) {
 	var event Event
 	err := binary.Read(db.reader, binary.BigEndian, &event)
 	return event, err
 }
 
-func (db *Database) Since(after time.Time) ([]Event, error) {
+func (db *DatabaseReader) Since(after time.Time) ([]Event, error) {
 	events := []Event{}
 	err := db.Reset()
 	if err != nil {
@@ -52,19 +82,23 @@ func (db *Database) Since(after time.Time) ([]Event, error) {
 	}
 }
 
-func (db *Database) All() ([]Event, error) {
+func (db *DatabaseReader) All() ([]Event, error) {
 	return db.Since(time.Time{})
 }
 
-func (db *Database) Reset() error {
+func (db *DatabaseReader) Reset() error {
 	_, err := db.reader.Seek(0, io.SeekStart)
 	return err
 }
 
-func (db *Database) Close() error {
+func (db *DatabaseReader) Close() error {
 	c, ok := db.reader.(io.Closer)
 	if ok {
 		return c.Close()
 	}
 	return nil
+}
+
+type syncer interface {
+	Sync() error
 }

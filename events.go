@@ -26,6 +26,13 @@ func (ut UnixTimestamp) String() string {
 	return ut.AsTime().String()
 }
 
+func NewEvent(what EventType, when time.Time) Event {
+	return Event{
+		What: what,
+		When: UnixTimestamp(when.Unix()),
+	}
+}
+
 type Event struct {
 	What EventType
 	_    [7]uint8 // padding
