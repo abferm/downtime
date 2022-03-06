@@ -9,11 +9,11 @@ import (
 	"github.com/leekchan/timeutil"
 )
 
-func NewDaemon(dataStore DataStore, database *DatabaseWriter, sleep time.Duration) *Daemon {
+func NewDaemon(dataStore DataStore, database EventWriter, sleep time.Duration) *Daemon {
 	return NewDaemonWithClock(dataStore, database, sleep, clock.New())
 }
 
-func NewDaemonWithClock(dataStore DataStore, database *DatabaseWriter, sleep time.Duration, clk clock.Clock) *Daemon {
+func NewDaemonWithClock(dataStore DataStore, database EventWriter, sleep time.Duration, clk clock.Clock) *Daemon {
 	return &Daemon{
 		dataStore: dataStore,
 		database:  database,
@@ -24,7 +24,7 @@ func NewDaemonWithClock(dataStore DataStore, database *DatabaseWriter, sleep tim
 
 type Daemon struct {
 	dataStore DataStore
-	database  *DatabaseWriter
+	database  EventWriter
 	sleep     time.Duration
 	clk       clock.Clock
 }

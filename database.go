@@ -8,6 +8,19 @@ import (
 	"time"
 )
 
+type EventReader interface {
+	io.Closer
+	Next() (Event, error)
+	Since(after time.Time) ([]Event, error)
+	All() ([]Event, error)
+	Reset() error
+}
+
+type EventWriter interface {
+	io.Closer
+	Append(event Event) error
+}
+
 func NewDatabaseWriter(writer io.Writer) *DatabaseWriter {
 	return &DatabaseWriter{
 		writer: writer,
